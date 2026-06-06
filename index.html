@@ -94,11 +94,11 @@
 
 <div id="msgList"></div>
 
-<!-- 只引入 Realtime Database 必需的 SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+<!-- 使用兼容的旧版 Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
-  // 你的 Firebase 配置（已去掉无关字段）
+  // 你的 Firebase 配置
   const firebaseConfig = {
     apiKey: "AIzaSyDGL47dfDwj4ZfmECU9D...",
     authDomain: "liaot-b9275.firebaseapp.com",
@@ -111,7 +111,7 @@
   const msgRef = db.ref("messages");
 
   let isAdmin = false;
-  const ADMIN_PWD = "jiuyou531"; // 改成你自己的管理员密码
+  const ADMIN_PWD = "123456"; // 改成你自己的管理员密码
 
   function loginAdmin() {
     const pwd = document.getElementById("adminPwd").value;
