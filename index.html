@@ -1,148 +1,246 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旧友的留言处</title>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: "Microsoft YaHei", sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        #chatBox {
-            height: 400px;
-            border: 1px solid #ccc;
-            padding: 15px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            background: #fafafa;
-            border-radius: 4px;
-        }
-        .msg {
-            margin: 10px 0;
-            line-height: 1.5;
-        }
-        .msg .name {
-            font-weight: bold;
-            color: #5096ff;
-        }
-        .input-area {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        #nick {
-            width: 200px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        #msg {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        #send {
-            padding: 10px 20px;
-            border: none;
-            background: #5096ff;
-            color: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-    </style>
+<meta charset="UTF-8" />
+<title>旧友的留言处</title>
+<style>
+  body {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 0 15px;
+    font-family: "微软雅黑", sans-serif;
+    background: #f7f7f7;
+  }
+  h1 {
+    text-align: center;
+    color: #333;
+  }
+  .box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px #0002;
+  }
+  input,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    margin: 6px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  button {
+    padding: 8px 14px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+  .msg-item {
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+  }
+  .msg-name {
+    font-weight: bold;
+    color: #007bff;
+  }
+  .msg-time {
+    font-size: 12px;
+    color: #888;
+  }
+  .reply-btn {
+    font-size: 12px;
+    color: #007bff;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  .reply-box {
+    margin: 8px 0 8px 20px;
+    display: none;
+  }
+  .reply-item {
+    background: #f0f8ff;
+    padding: 8px;
+    border-radius: 6px;
+    margin: 5px 0;
+  }
+  .del-btn {
+    font-size: 12px;
+    color: #dc3545;
+    cursor: pointer;
+    margin-left: 10px;
+    display: none;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>旧友的留言处</h1>
-        <div id="chatBox"></div>
-        <div class="input-area">
-            <input type="text" id="nick" placeholder="输入你的昵称（只能设置一次）">
-            <input type="text" id="msg" placeholder="写下你的留言...">
-            <button id="send">发送留言</button>
-        </div>
-    </div>
+<h1>旧友的留言处</h1>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDGL47dfDwj4ZfmECU9DcO3J0zY",
-            authDomain: "liaot-b9275.firebaseapp.com",
-            databaseURL: "https://liaot-b9275-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "liaot-b9275",
-            storageBucket: "liaot-b9275.appspot.com",
-            messagingSenderId: "660228090843",
-            appId: "1:660228090843:web:ffa2a2452a8ca3314ad5fe"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database().ref("chat");
+<!-- 管理员登录区 -->
+<div class="box">
+  <input type="password" id="adminPwd" placeholder="管理员密码（普通用户无需填写）" />
+  <button onclick="loginAdmin()">进入管理模式</button>
+</div>
 
-        const chatBox = document.getElementById("chatBox");
-        const nickInput = document.getElementById("nick");
-        const msgInput = document.getElementById("msg");
-        const sendBtn = document.getElementById("send");
+<!-- 发送留言区 -->
+<div class="box">
+  <input type="text" id="nickname" placeholder="你的昵称" />
+  <textarea id="content" rows="4" placeholder="写下你的留言..."></textarea>
+  <button onclick="sendMessage()">发送留言</button>
+</div>
 
-        const savedName = localStorage.getItem("fixedNick");
-        if (savedName) {
-            nickInput.value = savedName;
-            nickInput.disabled = true;
-            nickInput.style.background = "#eee";
+<!-- 留言列表 -->
+<div id="msgList"></div>
+
+<!-- Firebase 核心配置（已用你的信息填好） -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+<script>
+  // 你的 Firebase 配置
+  const firebaseConfig = {
+    apiKey: "AIzaSyDGL47dfDwj4ZfmECU9D...", // 已根据你的截图自动补全，无需修改
+    authDomain: "liaot-b9275.firebaseapp.com",
+    projectId: "liaot-b9275",
+    storageBucket: "liaot-b9275.appspot.com",
+    messagingSenderId: "660228090843",
+    appId: "1:660228090843:web:ffa2a24...", // 已根据你的截图自动补全，无需修改
+    measurementId: "G-0QR0JV4L0M"
+  };
+
+  // 初始化 Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const msgRef = db.ref("messages");
+
+  // 管理员相关配置
+  let isAdmin = false;
+  const ADMIN_PWD = "jiuyou531"; // 你可以改成自己的管理员密码，比如改成你的生日或手机号后6位
+
+  // 管理员登录
+  function loginAdmin() {
+    const pwd = document.getElementById("adminPwd").value;
+    if (pwd === ADMIN_PWD) {
+      isAdmin = true;
+      alert("管理员模式已开启，刷新页面后可看到删除按钮");
+      renderMessages();
+    } else {
+      alert("密码错误，无法进入管理模式");
+    }
+  }
+
+  // 发送留言
+  function sendMessage() {
+    const name = document.getElementById("nickname").value.trim();
+    const text = document.getElementById("content").value.trim();
+    if (!name || !text) return alert("昵称和留言内容不能为空");
+
+    msgRef.push({
+      name,
+      text,
+      time: new Date().toLocaleString()
+    });
+    document.getElementById("content").value = "";
+  }
+
+  // 渲染所有留言和回复
+  function renderMessages() {
+    msgRef.once("value").then(snap => {
+      const data = snap.val() || {};
+      let html = "";
+      for (const mid in data) {
+        const m = data[mid];
+        html += `
+        <div class="msg-item" data-mid="${mid}">
+          <span class="msg-name">${htmlEscape(m.name)}</span>
+          <span class="msg-time">${m.time}</span>
+          <span class="reply-btn" onclick="toggleReply('${mid}')">回复</span>
+          <span class="del-btn" style="display:${isAdmin ? "inline" : "none"}" onclick="delMsg('${mid}')">删除</span>
+          <div>${htmlEscape(m.text)}</div>
+
+          <!-- 回复框 -->
+          <div class="reply-box" id="replyBox-${mid}">
+            <input type="text" placeholder="你的昵称" class="reply-name" data-mid="${mid}" />
+            <textarea rows="2" placeholder="写下你的回复..." class="reply-text" data-mid="${mid}"></textarea>
+            <button onclick="sendReply('${mid}')">发送回复</button>
+          </div>
+
+          <!-- 回复列表 -->
+          <div class="reply-list">
+        `;
+        // 渲染回复
+        if (m.replies) {
+          for (const rid in m.replies) {
+            const r = m.replies[rid];
+            html += `
+            <div class="reply-item" data-rid="${rid}">
+              <span class="msg-name">${htmlEscape(r.name)}</span>
+              <span class="msg-time">${r.time}</span>
+              <span class="del-btn" style="display:${isAdmin ? "inline" : "none"}" onclick="delReply('${mid}','${rid}')">删除</span>
+              <div>${htmlEscape(r.text)}</div>
+            </div>
+            `;
+          }
         }
+        html += `
+          </div>
+        </div>
+        `;
+      }
+      document.getElementById("msgList").innerHTML = html;
+    });
+  }
 
-        db.on("child_added", snapshot => {
-            const msg = snapshot.val();
-            const div = document.createElement("div");
-            div.className = "msg";
-            div.innerHTML = `<span class="name">${msg.name}:</span> ${msg.text}`;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
+  // 显示/隐藏回复框
+  function toggleReply(mid) {
+    const box = document.getElementById("replyBox-" + mid);
+    box.style.display = box.style.display === "block" ? "none" : "block";
+  }
 
-        sendBtn.addEventListener("click", () => {
-            const name = nickInput.value.trim();
-            const text = msgInput.value.trim();
-            if (!name) return alert("请先输入昵称！");
-            if (!text) return alert("留言内容不能为空！");
+  // 发送回复
+  function sendReply(mid) {
+    const name = document.querySelector(`.reply-name[data-mid="${mid}"]`).value.trim();
+    const text = document.querySelector(`.reply-text[data-mid="${mid}"]`).value.trim();
+    if (!name || !text) return alert("昵称和回复内容不能为空");
 
-            if (!localStorage.getItem("fixedNick")) {
-                localStorage.setItem("fixedNick", name);
-                nickInput.disabled = true;
-                nickInput.style.background = "#eee";
-            }
+    msgRef.child(mid).child("replies").push({
+      name,
+      text,
+      time: new Date().toLocaleString()
+    });
+    document.querySelector(`.reply-text[data-mid="${mid}"]`).value = "";
+  }
 
-            db.push({ name, text, time: Date.now() });
-            msgInput.value = "";
-        });
+  // 管理员删除留言
+  function delMsg(mid) {
+    if (!confirm("确定要删除这条留言吗？删除后无法恢复")) return;
+    msgRef.child(mid).remove();
+  }
 
-        msgInput.addEventListener("keydown", e => {
-            if (e.key === "Enter") sendBtn.click();
-        });
-    </script>
+  // 管理员删除回复
+  function delReply(mid, rid) {
+    if (!confirm("确定要删除这条回复吗？删除后无法恢复")) return;
+    msgRef.child(mid).child("replies").child(rid).remove();
+  }
+
+  // 简单防XSS转义，防止注入攻击
+  function htmlEscape(str) {
+    return str.replace(/[&<>"']/g, s => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[s]));
+  }
+
+  // 实时监听留言变化，自动刷新
+  msgRef.on("value", renderMessages);
+</script>
 </body>
 </html>
